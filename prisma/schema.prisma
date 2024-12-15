@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model DataKaryawan {
+  idKar     String         @id @db.VarChar(3)
+  namaKar   String         @db.VarChar(50)
+  alamatKar String         @db.VarChar(100)
+  namaPab   String         @db.VarChar(50)
+  gajiKaryawan GajiKaryawan[] @relation("KaryawanGaji")
+}
+
+model GajiKaryawan {
+  idGaji      String         @id @db.VarChar(5)
+  namaKar     String         @db.VarChar(50)
+  namaPab     String         @db.VarChar(50)
+  jenisBahar  String         @db.VarChar(10)
+  ukuranBahar String         @db.VarChar(10)
+  targetKar   String         @db.VarChar(5)
+  upah        Float
+  totalUpah   Float
+  laporan     Laporan[]
+  
+  // Add a foreign key to reference DataKaryawan
+  dataKaryawanId String? @db.VarChar(3) // Foreign key field
+  dataKaryawan   DataKaryawan? @relation("KaryawanGaji", fields: [dataKaryawanId], references: [idKar])
+}
+
+model Laporan {
+  idLaporan            String   @id @db.VarChar(3)
+  jenisLaporan         String   @db.VarChar(50)
+  tanggalLaporan       DateTime
+  produksiPabrikIdPp  String   @db.VarChar(3)
+  gajiKaryawanIdGaji  String   @db.VarChar(5)
+
+  gajiKaryawan        GajiKaryawan @relation(fields: [gajiKaryawanIdGaji], references: [idGaji])
+  produksiPabrik     ProduksiPabrik @relation(fields: [produksiPabrikIdPp], references: [idPp])
+}
+
+model ProduksiHarian {
+  idPh        String   @id @db.VarChar(3)
+  namaPab     String   @db.VarChar(50)
+  namaKar     String   @db.VarChar(50)
+  jenisBahar  String   @db.VarChar(10)
+  ukuranBahar String   @db.VarChar(10)
+  targetKar   String   @db.VarChar(5)
+}
+
+model ProduksiPabrik {
+  idPp         String   @id @db.VarChar(3)
+  namaPab      String   @db.VarChar(50)
+  jenisBarang  String   @db.VarChar(10)
+  ukuranBarang String   @db.VarChar(10)
+  targetPab    String   @db.VarChar(5)
+  tanggalPp    DateTime
+  laporan      Laporan[]
+}
+
+enum Role {
+  ADMIN
+  KEPALA_GUDANG
+  OWNER
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  username String   @unique
+  password String
+  role     Role     @default(OWNER)
+}
